@@ -1,0 +1,14 @@
+#!/bin/bash
+
+device="$1"
+
+# This doesn't come from anywhere else... so just hardcoded it and generate files dynamically
+bridge=BRIDGE_NAME
+
+#set > /tmp/bridge.log
+#echo "$@" >> /tmp/bridge.log
+
+brctl addif "$bridge" "$device"
+ifconfig "$device" up
+
+exit $?

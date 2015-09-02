@@ -1,0 +1,274 @@
+#!/usr/bin/env bash
+
+libdir=$(dirname "$0")
+#echo "libdir = \"$libdir\""
+#+==========================================================================
+# defaults
+#+==========================================================================
+
+. "$libdir/defaults"
+
+net_bridge_default="$net_bridge"
+net_type_default="virtio"
+
+#+==========================================================================
+# functions (also usable inside the vmconf script)
+#+==========================================================================
+
+cmd=()
+add() {
+    echo "$@ \\"
+    cmd+=("$@")
+}
+echo "qemu-system-x86_64 \\"
+
+#+==========================================================================
+# vm settings
+#+==========================================================================
+
+vmconf=$(readlink -f "$1")
+if [ -f "$vmconf" ]; then
+    echo "vmconf = $vmconf"
+    . "$vmconf"
+else
+    echo "ERROR: vm \"$vmconf\" doesn't exist"
+    exit 1
+fi
+
+# TODO: validate that at least one net is there
+#if [ -z "$net1" ]; then
+#    echo "ERROR: net1 is required"
+#    exit 1
+#fi
+
+#+==========================================================================
+
+add -enable-kvm 
+add -m "$ram" -M q35
+
+# this makes CentOS kernel panic
+#-cpu host
+
+# add this for nested virtualization
+#add -cpu Nehalem,+vmx
+
+add -smp "$cpus",sockets=1,cores="$cpus",threads=1
+add -device ioh3420,bus=pcie.0,addr=1c.0,multifunction=on,port=1,chassis=1,id=root.1
+add -boot menu=on
+
+#=============================
+# disks TODO: change it to be more like the network stuff
+#=============================
+
+if [ -n "$disk1_file" ]; then
+    if [ ! -e "$disk1_file" -a -e /var/lib/libvirt/images/"$disk1_file" ]; then
+        disk1_file=/var/lib/libvirt/images/"$disk1_file"
+    fi
+    if [ ! -e "$disk1_file" ]; then
+        echo "ERROR: disk1_file \"$disk1_file\" not found"
+        exit 2;
+    fi
+fi
+
+if [ -z "$disk1_format" ]; then
+    disk1_format=qcow2
+fi
+
+if [ -n "$cdFile" ]; then
+    if [ ! -e "$cdFile" -a -e /var/lib/libvirt/images/"$cdFile" ]; then
+        cdFile=/var/lib/libvirt/images/"$cdFile"
+    fi
+    if [ ! -e "$cdFile" ]; then
+        echo "ERROR: cdFile \"$cdFile\" not found"
+        exit 2
+    fi
+fi
+
+#add -drive file=/dev/cdrom,media=cdrom,if=ide
+
+virtio_bus_added=0
+
+add_virtio_bus() {
+    if [ "$virtio_bus_added" = 0 ]; then
+#        add -device virtio-scsi-pci,id=scsi
+        add -device ahci,bus=pcie.0,id=ahci
+        virtio_bus_added=1
+    fi
+}
+
+nextIndex=0
+
+disknum=0
+for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo "^disk[0-9]+" | sort -u); do
+    disk_file=$(set | awk -F= -v name="$diskname" '$1 == name "_file" {print $2}')
+    disk_format=$(set | awk -F= -v name="$diskname" '$1 == name "_format" {print $2}')
+    disk_type=$(set | awk -F= -v name="$diskname" '$1 == name "_type" {print $2}')
+
+#    echo "DEBUG: file = $disk_file, format = $disk_format, type = $disk_type"
+
+    if [ "$disk_type" = "virtio" ]; then
+        add_virtio_bus
+    fi
+
+    if [ "$disk_type" = "ide" ]; then
+        #IDE disks
+        #  new ... works in manjaro, intended to work with multiple disks
+        #add -drive file=${disk_file},id=${diskname},format=${disk_format},bus=${disknum},media=disk,index=${disknum}
+
+        index=$nextIndex
+        let nextIndex++
+        add -drive file=${disk_file},id=${diskname},format=${disk_format},media=disk,index=${index}
+#TODO uncomment above 
+echo -n
+    elif [ "$disk_type" = "virtio" ]; then
+        #virtio disks
+        if [ -n "$disk_file" ]; then
+            add -drive file=${disk_file},id=${diskname},format=${disk_format},if=virtio
+        fi
+    else
+        echo "ERROR: unsupported disk_type \"$disk_type\""
+        exit 2
+    fi
+    let disknum++
+done
+
+if [ "$cdType" = "ide" ]; then
+    index=$nextIndex
+    let nextIndex++
+    add -drive file=${cdFile},id=isocd,media=cdrom,index="$index" #-device ide-cd,bus=ide.1,drive=isocd
+elif [ "$cdType" = "virtio" ]; then
+    index=$nextIndex
+    let nextIndex++
+    if [ "$disk_type" = "virtio" ]; then
+        add_virtio_bus
+    fi
+    if [ -n "$cdFile" ]; then
+        add -drive file=${cdFile},id=isocd,media=cdrom,index="$index" #-device ide-cd,bus=ahci.1,drive=isocd
+    fi
+elif [ -z "$cdType" -a -z "$cdFile" ]; then
+    # no cd
+    echo -n
+else
+    echo "ERROR: unsupported cdType \"$cdType\""
+    exit 2
+fi
+
+#=============================
+# network
+#=============================
+
+
+# Parse net* (net#_bridge=xxx and net#_mac=xxx)
+# this number is used only for the qemu ids, not parsing config
+netnum=0
+for netname in $(set | awk -F= '$1 ~ /^net[0-9]+_(bridge|mac)$/ {print $0}' | grep -Eo "^net[0-9]+" | sort -u); do
+    net_mac=$(set | awk -F= -v name="$netname" '$1 == name "_mac" {print $2}')
+    net_bridge=$(set | awk -F= -v name="$netname" '$1 == name "_bridge" {print $2}')
+    net_type=$(set | awk -F= -v name="$netname" '$1 == name "_type" {print $2}')
+
+    if [ -z "$net_mac" ]; then
+        # mac is optional... blank means generate one, save it to the conf file
+        net_mac=$(echo "$RANDOM" | md5sum | sed -r "s/(..)(..)(..).*/4E:30:18:\1:\2:\3/")
+        while grep "mac=$net_mac" "$libdir"/* >/dev/null 2>&1; do
+            net_mac=$(echo "$RANDOM" | md5sum | sed -r "s/(..)(..)(..).*/4E:30:18:\1:\2:\3/")
+        done
+
+        if grep -E ".*${netname}_mac=.*" "$vmconf" >/dev/null 2>&1; then
+            sed -i -r "s/.*${netname}_mac=.*/${netname}_mac=\"$net_mac\"/" "$vmconf"
+        else
+            echo "${netname}_mac=\"$net_mac\"" >> "$vmconf"
+        fi
+    fi
+
+    # bridge is optional
+    if set | grep "^${netname}_bridge=" >/dev/null 2>&1; then
+        if [ -n "$net_bridge" ]; then
+            bridgeScript="${baseBridgeScript}-${net_bridge}"
+            if [ ! -e "${bridgeScript}" ]; then
+                sed "s/BRIDGE_NAME/$net_bridge/g" "${baseBridgeScript}" > "${bridgeScript}"
+                chmod +rx "${bridgeScript}"
+            fi
+        else
+            # blank means no bridge
+            bridgeScript=/bin/true
+        fi
+    else
+        # no bridge variable means use default
+        bridgeScript="${baseBridgeScript}-${net_bridge_default}"
+    fi
+
+    if [ -z "$net_type" ]; then
+        net_type="$net_type_default"
+    fi
+
+    if [ "$net_type" = "e1000" ]; then
+        # emulated Intel network
+        netDevice=e1000
+    elif [ "$net_type" = "rtl8139" ]; then
+        # emulated Realtek network
+        netDevice=rtl8139
+    elif [ "$net_type" = "virtio" ]; then
+        # virtio network
+        netDevice=virtio-net-pci
+    else
+        echo "ERROR: unsupported net_type \"$net_type\""
+        exit 2
+    fi
+
+    #shorten the ifname (max 15 characters)
+    ifname="$vmname-$netname"
+    shortenedName="$vmname"
+    while [ "${#ifname}" -ge 15 ]; do
+        shortenedName=${shortenedName:0:-1}
+        ifname="$shortenedName-$netname"
+    done
+
+    # TODO: make sure this name is unique
+    # maybe just give up on names and use numbers
+    # or just make sure names are short and be limited in how many nics to have (short name = filename, long name = ?)
+
+    addr=$((12+netnum))
+    add -netdev type=tap,id=net"$netnum",ifname="$ifname",script=${bridgeScript},downscript=no,vhost=on 
+    add -device "$netDevice",mac="$net_mac",netdev=net"$netnum",bus=pcie.0,addr=0x"$addr",id=net"$netnum"
+    let netnum++
+done
+
+#=============================
+# other
+#=============================
+
+# -rtc-td-hack 
+
+#=============================
+# monitor
+#=============================
+
+#telnet monitor
+#add -monitor telnet:localhost:7100,server,nowait,nodelay
+
+#stdio monitor
+add -monitor stdio
+
+#=============================
+# GUI
+# vnc, spice, or default (which is an X11 window)
+#=============================
+
+if [ "$vgaType" = "vnc" ]; then
+    #vnc
+    add -vnc :0 
+elif [ "$vgaType" = "spice" ]; then
+    #spice:
+    add -vga qxl -spice port=5900,addr=127.0.0.1,disable-ticketing 
+elif [ -n "$vgaType" ]; then
+    # std,qxl,cirrus,etc.
+    add -vga "$vgaType"
+else
+    # otherwise the qemu default is cirrus, but let's change it to vmware
+    add -vga "vmware"
+fi
+
+#=============================
+
+qemu-system-x86_64 "${cmd[@]}"
+
