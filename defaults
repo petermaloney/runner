@@ -17,8 +17,8 @@ diskType=virtio
 # netType: e1000, virtio
 netType=virtio
 
-baseBridgeScript=/root/kvm/qemu-bridge
+baseBridgeScript="$(dirname "$(readlink -f "$0")")"/qemu-bridge
 
-net_bridge="lan"
+net_bridge="br0"
 net_type="virtio"
 
