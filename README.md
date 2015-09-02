@@ -40,23 +40,23 @@ $ vim vm1
 ```
 
 ```
-    #!/usr/bin/env runner
+#!/usr/bin/env runner
 
-    disk1_file=/dev/somevolumegroup/somelogicalvolume
-    disk1_format=raw
-    disk1_type=ide
+disk1_file=/dev/somevolumegroup/somelogicalvolume
+disk1_format=raw
+disk1_type=ide
 
-    cdFile=/dev/sr0
-    cdType=ide
+cdFile=/dev/sr0
+cdType=ide
 
-    ram=4096
-    cpus=4
+ram=4096
+cpus=4
 
-    # blank means auto-generate
-    net1_mac=
-    net1_type=e1000
+# blank means auto-generate
+net1_mac=
+net1_type=e1000
 
-    vgaType=vmware
+vgaType=vmware
 ```
 
 ```
