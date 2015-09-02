@@ -1,5 +1,4 @@
-unnamed qemu runner
-==========
+# unnamed qemu runner
 
 Author: Peter Maloney
 
@@ -23,8 +22,10 @@ TODO
 Installation
 ==========
 
-$ git checkout TODO: put url here
+```
+$ git clone git@github.com:petermaloney/runner.git
 $ mkdir runner-conf
+```
 
 Optionally put "runner" in $PATH
 
@@ -33,33 +34,40 @@ Usage
 Either put "runner" in $PATH, or use absolute path in the shebang (first line in config script), or run with "/path/to/runner /path/to/configfile"
 
 make a config file like this:
+```
 $ cd runner-conf
 $ vim vm1
+```
 
--------------------------
-#!/usr/bin/env runner
+```
+    #!/usr/bin/env runner
 
-disk1_file=/dev/somevolumegroup/somelogicalvolume
-disk1_format=raw
-disk1_type=ide
+    disk1_file=/dev/somevolumegroup/somelogicalvolume
+    disk1_format=raw
+    disk1_type=ide
 
-cdFile=/dev/sr0
-cdType=ide
+    cdFile=/dev/sr0
+    cdType=ide
 
-ram=4096
-cpus=4
+    ram=4096
+    cpus=4
 
-# blank means auto-generate
-net1_mac=
-net1_type=e1000
+    # blank means auto-generate
+    net1_mac=
+    net1_type=e1000
 
-vgaType=vmware
--------------------------
+    vgaType=vmware
+```
 
+```
+$ chmod u+x vm1
+```
 
-then run your config file:
+then run your config file (as root):
 
-./vm1
+```
+# ./vm1
+```
 
 assumptions - not bugs
 ==========
