@@ -64,7 +64,7 @@ then run your config file:
 assumptions - not bugs
 ==========
 
-using -q35 always; this works with even windows xp 32 bit... probably not a problem for anyone.
-it assumes if running with $DISPLAY set, you want the gui, else vnc
-config file is bash... you can't change it with the shebang
-defaults file contains some other things you might call assumptions... such as the bridge name br0
+- using -q35 always; this works with even windows xp 32 bit... probably not a problem for anyone.
+- it assumes if running with $DISPLAY set, you want the gui, else vnc
+- config file is bash... you can't change it with the shebang
+- defaults file contains some other things you might call assumptions... such as the bridge name br0
