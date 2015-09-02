@@ -13,12 +13,12 @@ Goals and features
 
 TODO
 ==========
-this is a disorganized repo... I pushed from somewhere without all the newest files
-give it a name and rename stuff... maybe call it qrun
-convert this to an actual markdown syntax
-vnc port is always 5900, only one vm supported ... I probably already fixed that but it's not in this version
-add a --dry-run option, so it'll print the command without running
-document options and defaults for variables like disk1_type, cdType, net1_type, vgaType
+- this is a disorganized repo... I pushed from somewhere without all the newest files
+- give it a name and rename stuff... maybe call it qrun
+- convert this to an actual markdown syntax
+- vnc port is always 5900, only one vm supported ... I probably already fixed that but it's not in this version
+- add a --dry-run option, so it'll print the command without running
+- document options and defaults for variables like disk1_type, cdType, net1_type, vgaType
 
 Installation
 ==========
