@@ -13,11 +13,10 @@ Goals and features
 TODO
 ==========
 - this is a disorganized repo... I pushed from somewhere without all the newest files
+- for the "qemu-bridge" file and "qemu-bridge-*", first look in same dir as conf, then in same as runner
 - give it a name and rename stuff... maybe call it qrun
-- convert this to an actual markdown syntax
 - vnc port is always 5900, only one vm supported ... I probably already fixed that but it's not in this version
 - add a --dry-run option, so it'll print the command without running
-- document options and defaults for variables like disk1_type, cdType, net1_type, vgaType
 
 Installation
 ==========
@@ -25,6 +24,9 @@ Installation
 ```
 $ git clone git@github.com:petermaloney/runner.git
 $ mkdir runner-conf
+$ cp runner/defaults runner-conf/
+$ vim runner-conf/defaults
+    (edit the defaults if you like)
 ```
 
 Optionally put "runner" in $PATH
@@ -69,6 +71,27 @@ then run your config file (as root):
 # ./vm1
 ```
 
+Configuration Options
+==========
+
+disk1_type:
+- virtio
+- ide
+
+disk1_format:
+- raw
+- qcow2
+
+cdType:
+- virtio
+- ide
+
+net1_type:
+- e1000e
+- virtio
+
+vgaType
+
 assumptions - not bugs
 ==========
 
@@ -76,3 +99,8 @@ assumptions - not bugs
 - it assumes if running with $DISPLAY set, you want the gui, else vnc
 - config file is bash... you can't change it with the shebang
 - defaults file contains some other things you might call assumptions... such as the bridge name br0
+
+assumptions - and maybe bugs
+==========
+
+- currently tested on manjaro qemu 2.3.0-7 and 2.4.0-2; maybe some quirks or qemu command syntax are not from qemu but from Manjaro

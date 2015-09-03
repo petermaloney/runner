@@ -18,12 +18,22 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 libdir=$(dirname "$0")
+vmconf=$(readlink -f "$1")
 #echo "libdir = \"$libdir\""
+
 #+==========================================================================
 # defaults
 #+==========================================================================
 
-. "$libdir/defaults"
+confdir=$(dirname "$vmconf")
+
+if [ -e "$confdir"/defaults ]; then
+    . "$confdir/defaults"
+elif [ -e "$libdir"/defaults ]; then
+    . "$libdir/defaults"
+else
+    echo "WARNING: defaults file not found (in either \"$confdir\" or \"$libdir\"), so skipping loading it"
+fi
 
 net_bridge_default="$net_bridge"
 net_type_default="virtio"
@@ -43,7 +53,6 @@ echo "qemu-system-x86_64 \\"
 # vm settings
 #+==========================================================================
 
-vmconf=$(readlink -f "$1")
 if [ -f "$vmconf" ]; then
     echo "vmconf = $vmconf"
     . "$vmconf"
@@ -212,6 +221,10 @@ for netname in $(set | awk -F= '$1 ~ /^net[0-9]+_(bridge|mac)$/ {print $0}' | gr
     else
         # no bridge variable means use default
         bridgeScript="${baseBridgeScript}-${net_bridge_default}"
+        if [ ! -e "${bridgeScript}" ]; then
+            sed "s/BRIDGE_NAME/$net_bridge/g" "${baseBridgeScript}" > "${bridgeScript}"
+            chmod +rx "${bridgeScript}"
+        fi
     fi
 
     if [ -z "$net_type" ]; then
