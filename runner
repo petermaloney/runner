@@ -222,7 +222,7 @@ for netname in $(set | awk -F= '$1 ~ /^net[0-9]+_(bridge|mac)$/ {print $0}' | gr
         # no bridge variable means use default
         bridgeScript="${baseBridgeScript}-${net_bridge_default}"
         if [ ! -e "${bridgeScript}" ]; then
-            sed "s/BRIDGE_NAME/$net_bridge/g" "${baseBridgeScript}" > "${bridgeScript}"
+            sed "s/BRIDGE_NAME/$net_bridge_default/g" "${baseBridgeScript}" > "${bridgeScript}"
             chmod +rx "${bridgeScript}"
         fi
     fi
@@ -300,5 +300,7 @@ fi
 
 #=============================
 
-qemu-system-x86_64 "${cmd[@]}"
+if [ "$dry_run" != 1 ]; then
+    qemu-system-x86_64 "${cmd[@]}"
+fi
 
