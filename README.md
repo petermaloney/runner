@@ -12,11 +12,8 @@ Goals and features
 
 TODO
 ==========
-- this is a disorganized repo... I pushed from somewhere without all the newest files
 - for the "qemu-bridge" file and "qemu-bridge-*", first look in same dir as conf, then in same as runner
 - give it a name and rename stuff... maybe call it qrun
-- vnc port is always 5900, only one vm supported ... I probably already fixed that but it's not in this version
-- add a --dry-run option, so it'll print the command without running
 
 Installation
 ==========

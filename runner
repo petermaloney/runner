@@ -342,7 +342,10 @@ add -monitor stdio
 
 if [ "$vgaType" = "vnc" ]; then
     #vnc
-    add -vnc :0 
+	if [ "$vncport" ]; then
+		vncport=0
+	fi
+    add -vnc :"$vncport"
 elif [ "$vgaType" = "spice" ]; then
     #spice:
     add -vga qxl -spice port=5900,addr=127.0.0.1,disable-ticketing 

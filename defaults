@@ -21,6 +21,9 @@ baseBridgeScript="$(dirname "$(readlink -f "$0")")"/qemu-bridge
 net_bridge="br0"
 net_type="virtio"
 
+# actual port used by qemu is 5900 + vncport specified here
+vncport=0
+
 if [ -e /etc/apparmor.d/usr.bin.qemu-system-x86_64 ]; then
 	apparmor=1
 else
