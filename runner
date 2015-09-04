@@ -91,6 +91,27 @@ while [ "$#" != 0 ]; do
 done
 
 #+==========================================================================
+# for apparmor
+#+==========================================================================
+
+apparmor() {
+    path="$1"
+    if [ -n "$path" ]; then
+        echo "\"$(readlink -f "$path")\" rw," >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-"$vmconf"
+    fi
+}
+
+if [ "$apparmor" = 1 ]; then
+    # if the "all" file doesn't include this VM's profile, add that
+    if ! grep "usr.bin.qemu-system-x86_64-all>$" /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all; then
+        echo "#include <local/usr.bin.qemu-system-x86_64-${vmconf}>" >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all
+    fi
+
+    # Clear this VM's profile
+    echo > /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-"$vmconf"
+fi
+
+#+==========================================================================
 
 add -enable-kvm 
 add -m "$ram" -M q35
@@ -155,6 +176,11 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
 
 #    echo "DEBUG: file = $disk_file, format = $disk_format, type = $disk_type"
 
+    if [ "$apparmor" = 1 ]; then
+        # add the required files to this VM's profile
+        apparmor "$disk_file"
+    fi
+
     if [ "$disk_type" = "virtio" ]; then
         add_virtio_bus
     fi
@@ -176,6 +202,13 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
     fi
     let disknum++
 done
+
+if [ "$apparmor" = 1 ]; then
+    if [ -n "$cdFile" ]; then
+        # add the required files to this VM's profile
+        apparmor "$cdFile"
+    fi
+fi
 
 if [ "$cdType" = "ide" ]; then
     index=$nextIndex
@@ -315,6 +348,15 @@ elif [ -n "$vgaType" ]; then
 else
     # otherwise the qemu default is cirrus, but let's change it to vmware
     add -vga "vmware"
+fi
+
+if [ "$apparmor" = 1 ]; then
+    apparmor "$disk1"
+    apparmor "$disk2"
+    apparmor "$isovirtiowin"
+
+    # apply the policy (to all VMs)
+    aa-enforce /etc/apparmor.d/usr.bin.qemu-system-x86_64
 fi
 
 #=============================
