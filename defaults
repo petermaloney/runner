@@ -9,7 +9,6 @@ cdPath=/var/lib/libvirt/images/
 
 ram=1024
 cpus=2
-vmname=$(basename "$1")
 
 # diskType: ide, virtio
 diskType=virtio

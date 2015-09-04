@@ -17,9 +17,17 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# dir where this script is found
 libdir=$(dirname "$0")
+# path to the vm conf that is to be loaded
 vmconf=$(readlink -f "$1")
-#echo "libdir = \"$libdir\""
+shift
+# just the name of the vm conf; this can be overriden in the conf file
+vmname=$(basename "$vmconf")
+
+echo "libdir = \"$libdir\""
+echo "vmconf = \"$vmconf\""
+echo "vmname = \"$vmname\""
 
 #+==========================================================================
 # defaults
@@ -66,6 +74,21 @@ fi
 #    echo "ERROR: net1 is required"
 #    exit 1
 #fi
+
+#+==========================================================================
+# Command Line Arguments
+#+==========================================================================
+
+dry_run=0
+while [ "$#" != 0 ]; do
+    if [ "$1" = "-n" ]; then
+        shift
+        dry_run=1
+    else
+        echo "ERROR: unsupported argument: \"$1\""
+        exit 1
+    fi
+done
 
 #+==========================================================================
 
@@ -139,13 +162,9 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
     if [ "$disk_type" = "ide" ]; then
         #IDE disks
         #  new ... works in manjaro, intended to work with multiple disks
-        #add -drive file=${disk_file},id=${diskname},format=${disk_format},bus=${disknum},media=disk,index=${disknum}
-
         index=$nextIndex
         let nextIndex++
         add -drive file=${disk_file},id=${diskname},format=${disk_format},media=disk,index=${index}
-#TODO uncomment above 
-echo -n
     elif [ "$disk_type" = "virtio" ]; then
         #virtio disks
         if [ -n "$disk_file" ]; then
