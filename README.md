@@ -87,7 +87,9 @@ net1_type:
 - e1000e
 - virtio
 
-vgaType
+vgaType - any qemu type you set is passed through to qemu (std,qxl,cirrus,vmware,etc.), except these which are handled specially, and vmware is the default if blank:
+- vnc
+- spice
 
 assumptions - not bugs
 ==========
