@@ -62,7 +62,6 @@ echo "qemu-system-x86_64 \\"
 #+==========================================================================
 
 if [ -f "$vmconf" ]; then
-    echo "vmconf = $vmconf"
     . "$vmconf"
 else
     echo "ERROR: vm \"$vmconf\" doesn't exist"
@@ -96,19 +95,24 @@ done
 
 apparmor() {
     path="$1"
+	modes="$2"
+	if [ -z "$modes" ]; then
+		# rw is for disks
+		modes="rw"
+	fi
     if [ -n "$path" ]; then
-        echo "\"$(readlink -f "$path")\" rw," >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-"$vmconf"
+        echo "\"$(readlink -f "$path")\" $modes," >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-"$vmname"
     fi
 }
 
 if [ "$apparmor" = 1 ]; then
     # if the "all" file doesn't include this VM's profile, add that
     if ! grep "usr.bin.qemu-system-x86_64-all>$" /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all; then
-        echo "#include <local/usr.bin.qemu-system-x86_64-${vmconf}>" >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all
+        echo "#include <local/usr.bin.qemu-system-x86_64-${vmname}>" >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all
     fi
 
     # Clear this VM's profile
-    echo > /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-"$vmconf"
+    echo > /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-"$vmname"
 fi
 
 #+==========================================================================
@@ -354,6 +358,8 @@ if [ "$apparmor" = 1 ]; then
     apparmor "$disk1"
     apparmor "$disk2"
     apparmor "$isovirtiowin"
+# TODO: automatically generate the bridge profile too? it's not just a single line... it has its own executables it uses too
+#	apparmor "$bridgeScript" rix
 
     # apply the policy (to all VMs)
     aa-enforce /etc/apparmor.d/usr.bin.qemu-system-x86_64
