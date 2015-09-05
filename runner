@@ -342,7 +342,7 @@ add -monitor stdio
 
 if [ "$vgaType" = "vnc" ]; then
     #vnc
-	if [ -n "$vncport" ]; then
+	if [ -z "$vncport" ]; then
 		vncport=0
 	fi
     add -vnc :"$vncport"
