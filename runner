@@ -50,10 +50,17 @@ net_type_default="virtio"
 # functions (also usable inside the vmconf script)
 #+==========================================================================
 
+IFS=' '
+
 cmd=()
 add() {
     echo "    $@ \\"
     cmd+=("$@")
+}
+
+add_vfio() {
+    device="$1"
+    add -device vfio-pci,host="$device",bus=pcie.0
 }
 
 #+==========================================================================
@@ -141,27 +148,52 @@ add -smp "$cores",sockets="$sockets",cores="$cores",threads=1
 add -device ioh3420,bus=pcie.0,addr=1c.0,multifunction=on,port=1,chassis=1,id=root.1
 add -boot menu=on
 
+############################
+# gpu
+############################
+
+if [ -n "$vgaPci" ]; then
+    # ==========================
+    # video (this one must be the first passthrough device or maybe it won't work)
+    # ==========================
+
+    if [ -n "$romFile" ] && [ ! -s "$romFile" ]; then
+        # If you don't check, qemu will happily run without the rom file... in the case of my hardware, this means risking hanging the machine
+        # -s means "FILE exists and has a size greater than zero"
+        echo "Can't find rom file \"$romFile\"... aborting."
+        exit 1
+    fi
+
+    add -vga none
+
+    if [ -n "$romFile" ]; then
+        add -device vfio-pci,host="$vgaPci",bus=root.1,multifunction=on,x-vga=on,addr=0.0,romfile="$romFile"
+    else
+        add -device vfio-pci,host="$vgaPci",bus=root.1,multifunction=on,x-vga=on,addr=0.0
+    fi
+fi
+
+# ==========================
+# sound
+# ==========================
+
+if [ -n "$soundhw" ]; then
+    add -soundhw "$soundhw"
+fi
+
+#=============================
+# usb
+#=============================
+
+# support adding usb devices from the qemu monitor
+add -usb
+
 #=============================
 # disks TODO: change it to be more like the network stuff
 #=============================
 
 nextIndex=0
 disknum=0
-
-if [ -n "$disk1_file" ]; then
-    if [ ! -e "$disk1_file" -a -e /var/lib/libvirt/images/"$disk1_file" ]; then
-        disk1_file=/var/lib/libvirt/images/"$disk1_file"
-    fi
-    if [ ! -e "$disk1_file" ]; then
-        echo "ERROR: disk1_file \"$disk1_file\" not found"
-        exit 2;
-    fi
-fi
-
-if [ -z "$disk1_format" ]; then
-    disk1_format=qcow2
-fi
-
 
 virtio_bus_added=0
 
@@ -180,6 +212,34 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
 
 #    echo "DEBUG: file = $disk_file, format = $disk_format, type = $disk_type"
 
+    if [ -n "$disk_file" ]; then
+        if [ ! -e "$disk_file" -a -e "$imgPath"/"$disk_file" ]; then
+            disk1_file="$imgPath"/"$disk_file"
+        fi
+        if [ ! -e "$disk_file" ]; then
+            echo "ERROR: disk1_file \"$disk_file\" not found"
+            exit 2;
+        fi
+    fi
+    if [ -z "$disk_format" ]; then
+        if [ -n "$diskFormat" ]; then
+            # if set, we use the default
+            disk_format="$diskFormat"
+        else
+            # if no default set, we just assume raw for special, qcow2 otherwise
+            if file $(readlink -f /dev/data/win7a) | grep -q "block special"; then
+                disk_format=raw
+            else
+                disk_format=qcow2
+            fi
+        fi
+    fi
+    if [ -z "$disk_type" ]; then
+        if [ -n "$diskType" ]; then
+            disk_type="$diskType"
+        fi
+    fi
+
     if [ "$apparmor" = 1 ]; then
         # add the required files to this VM's profile
         apparmor "$disk_file"
@@ -192,13 +252,13 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
     if [ "$disk_type" = "ide" ]; then
         #IDE disks
         #  new ... works in manjaro, intended to work with multiple disks
-        index=$nextIndex
+        add -drive file=${disk_file},id=${diskname},format=${disk_format},index=${nextIndex},media=disk,discard=on
         let nextIndex++
-        add -drive file=${disk_file},id=${diskname},format=${disk_format},media=disk,index=${index}
     elif [ "$disk_type" = "virtio" ]; then
         #virtio disks
         if [ -n "$disk_file" ]; then
-            add -drive file=${disk_file},id=${diskname},format=${disk_format},if=virtio
+            add -drive file=${disk_file},id=${diskname},format=${disk_format},index=${nextIndex},media=disk,if=virtio,discard=on
+            let nextIndex++
         fi
     else
         echo "ERROR: unsupported disk_type \"$disk_type\""
@@ -208,41 +268,48 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
 done
 
 #=============================
-# cd files TODO: change it to be more like the network stuff
+# cd files
 #=============================
 
-if [ -n "$cdFile" ]; then
-    if [ ! -e "$cdFile" -a -e "$cdPath"/"$cdFile" ]; then
-        cdFile="$cdPath"/"$cdFile"
-    fi
-    if [ ! -e "$cdFile" ]; then
-        echo "ERROR: cdFile \"$cdFile\" not found"
-        exit 2
-    fi
-fi
+for cdname in $(set | awk -F= '$1 ~ /^cd[0-9]+_file$/ {print $0}' | grep -Eo "^cd[0-9]+" | sort -u); do
+    cd_file=$(set | awk -F= -v name="$cdname" '$1 == name "_file" {print $2}')
+    cd_type=$(set | awk -F= -v name="$cdname" '$1 == name "_type" {print $2}')
 
-if [ -n "$cdFile" ]; then
-    if [ "$cdType" = "ide" ]; then
-        index=$nextIndex
-        let nextIndex++
-        add -drive file=${cdFile},id=isocd,media=cdrom,index="$index"
-    elif [ "$cdType" = "virtio" ]; then
-        index=$nextIndex
-        let nextIndex++
-        if [ "$disk_type" = "virtio" ]; then
-            add_virtio_bus
+    if [ -n "$cd_file" ]; then
+        if [ ! -e "$cd_file" -a -e "$cdPath"/"$cd_file" ]; then
+            cd1_file="$cdPath"/"$cd_file"
         fi
-        if [ -n "$cdFile" ]; then
-            add -drive file=${cdFile},id=isocd,media=cdrom,index="$index"
+        if [ ! -e "$cd_file" ]; then
+            echo "ERROR: cd_file \"$cd_file\" not found"
+            exit 2
         fi
-    elif [ -z "$cdType" -a -z "$cdFile" ]; then
-        # no cd
-        echo -n
-    else
-        echo "ERROR: unsupported cdType \"$cdType\""
-        exit 2
     fi
-fi
+
+    if [ -n "$cd_file" ]; then
+        if [ "$cd_type" = "ide" ]; then
+            add -drive file=${cd_file},id=isocd"$nextIndex",media=cdrom,index="$nextIndex"
+            let nextIndex++
+        elif [ "$cd_type" = "virtio" ]; then
+            if [ "$disk_type" = "virtio" ]; then
+                add_virtio_bus
+            fi
+            if [ -n "$cd_file" ]; then
+                add -drive file=${cd_file},id=isocd"$nextIndex",media=cdrom,index="$nextIndex"
+                let nextIndex++
+            fi
+        elif [ -z "$cd_type" -a -z "$cd_file" ]; then
+            # no cd
+            echo -n
+        else
+            echo "ERROR: unsupported cd_type \"$cd_type\""
+            exit 2
+        fi
+    fi
+done
+
+# an empty CD-ROM you can put cds in with qemu monitor (eg. change cdrom /dev/sr0)
+add -drive media=cdrom,id=cdrom,index="$nextIndex",media=cdrom
+let nextIndex++
 
 #=============================
 # network
@@ -343,7 +410,7 @@ add -monitor stdio
 # vnc, spice, or default (which is an X11 window)
 #=============================
 
-if [ "$vgaType" = "vnc" ]; then
+if [ -n "$vgaPci" -o "$vgaType" = "vnc" ]; then
     #vnc
 	if [ -z "$vncport" ]; then
 		vncport=0
@@ -379,6 +446,9 @@ if [ "$apparmor" = 1 ]; then
     fi
     if [ -n "$biosbin" ]; then
         apparmor "$biosbin"
+    fi
+    if [ -n "$romFile" ]; then
+        apparmor "$romFile"
     fi
 
 # TODO: automatically generate the bridge profile too? it's not just a single line... it has its own executables it uses too
