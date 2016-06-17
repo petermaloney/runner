@@ -13,6 +13,9 @@ cpus=2
 # diskType: ide, virtio
 diskType=virtio
 
+# cdType: ide, virtio
+cdType=ide
+
 # netType: e1000, virtio
 netType=virtio
 

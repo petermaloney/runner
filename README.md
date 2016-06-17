@@ -45,8 +45,8 @@ disk1_file=/dev/somevolumegroup/somelogicalvolume
 disk1_format=raw
 disk1_type=ide
 
-cdFile=/dev/sr0
-cdType=ide
+cd1_file=/dev/sr0
+cd1_type=ide
 
 ram=4096
 cpus=4
@@ -57,6 +57,19 @@ net1_type=e1000
 
 vgaType=vmware
 ```
+
+Example for passing through a graphics card and some other PCI device (eg. usb controller).
+```
+#don't set vgaType if setting vgaPci
+#vgaType=vmware
+
+romDir=/mnt/archive/software/vgarom/Sapphire.HD6770.1024
+romFile="$romDir"/Sapphire.HD6770.1024.120105.rom
+vgaPci=05:00.0
+
+add_vfio 00:14.2
+```
+
 
 ```
 $ chmod u+x vm1
@@ -79,7 +92,7 @@ disk1_format:
 - raw
 - qcow2
 
-cdType:
+cd1_type:
 - virtio
 - ide
 
