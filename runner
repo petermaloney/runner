@@ -205,6 +205,7 @@ add_virtio_bus() {
     fi
 }
 
+IFS=$'\n'
 for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo "^disk[0-9]+" | sort -u); do
     disk_file=$(set | awk -F= -v name="$diskname" '$1 == name "_file" {print $2}')
     disk_format=$(set | awk -F= -v name="$diskname" '$1 == name "_format" {print $2}')
@@ -237,6 +238,8 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
     if [ -z "$disk_type" ]; then
         if [ -n "$diskType" ]; then
             disk_type="$diskType"
+        else
+            disk_type=ide
         fi
     fi
 
@@ -271,6 +274,7 @@ done
 # cd files
 #=============================
 
+IFS=$'\n'
 for cdname in $(set | awk -F= '$1 ~ /^cd[0-9]+_file$/ {print $0}' | grep -Eo "^cd[0-9]+" | sort -u); do
     cd_file=$(set | awk -F= -v name="$cdname" '$1 == name "_file" {print $2}')
     cd_type=$(set | awk -F= -v name="$cdname" '$1 == name "_type" {print $2}')
@@ -282,6 +286,13 @@ for cdname in $(set | awk -F= '$1 ~ /^cd[0-9]+_file$/ {print $0}' | grep -Eo "^c
         if [ ! -e "$cd_file" ]; then
             echo "ERROR: cd_file \"$cd_file\" not found"
             exit 2
+        fi
+    fi
+    if [ -z "$cd_type" ]; then
+        if [ -n "$cdType" ]; then
+            cd_type="$cdType"
+        else
+            cd_type=ide
         fi
     fi
 
@@ -315,6 +326,7 @@ let nextIndex++
 # network
 #=============================
 
+IFS=$'\n'
 # Parse net* (net#_bridge=xxx, net#_mac=xxx, net#_type=xxx)
 # this number is used only for the qemu ids, not parsing config
 netnum=0
