@@ -51,7 +51,7 @@ cd1_type=ide
 ram=4096
 cpus=4
 
-# blank means auto-generate
+# blank mac means auto-generate and write in this file on the first run
 net1_mac=
 net1_type=e1000
 
