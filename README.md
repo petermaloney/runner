@@ -84,6 +84,10 @@ then run your config file (as root):
 Configuration Options
 ==========
 
+disk1_file:
+- path to file or raw device, eg. /dev/mapper/vms-vm1disk2
+- ceph rbd with usual syntax, rbd:{pool}/{image}[:option=value], eg. rbd:rbd/vm-101-disk-1:id=peter
+
 disk1_type:
 - virtio
 - ide
