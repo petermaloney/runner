@@ -4,25 +4,23 @@
 # defaults
 #+==========================================================================
 
-imgPath=/var/lib/libvirt/images/
-cdPath=/var/lib/libvirt/images/
+img_path=/var/lib/libvirt/images/
+cd_path=/var/lib/libvirt/images/
 
 ram=1024
 cpus=2
 
 # diskType: ide, virtio
-diskType=virtio
+disk_type=virtio
 
 # cdType: ide, virtio
-cdType=ide
+cd_type=ide
 
 # netType: e1000, virtio
-netType=virtio
+net_type="virtio"
+net_bridge="br0"
 
 baseBridgeScript="$(dirname "$(readlink -f "$0")")"/qemu-bridge
-
-net_bridge="br0"
-net_type="virtio"
 
 # actual port used by qemu is 5900 + vncport specified here
 vncport=0
