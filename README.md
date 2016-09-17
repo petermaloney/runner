@@ -108,6 +108,9 @@ vgaType - any qemu type you set is passed through to qemu (std,qxl,cirrus,vmware
 - vnc
 - spice
 
+drive_type:
+- applies to both diskN_type and cdN_type
+
 assumptions - not bugs
 ==========
 

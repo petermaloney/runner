@@ -245,6 +245,8 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
     if [ -z "$diskN_type" ]; then
         if [ -n "$disk_type" ]; then
             diskN_type="$disk_type"
+        elif [ -n "$drive_type" ]; then
+            diskN_type="$drive_type"
         else
             diskN_type=ide
         fi
@@ -302,6 +304,8 @@ for cdname in $(set | awk -F= '$1 ~ /^cd[0-9]+_file$/ {print $0}' | grep -Eo "^c
     if [ -z "$cdN_type" ]; then
         if [ -n "$cd_type" ]; then
             cdN_type="$cd_type"
+        elif [ -n "$drive_type" ]; then
+            cdN_type="$drive_type"
         else
             cdN_type=ide
         fi
