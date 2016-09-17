@@ -5,5 +5,5 @@
 * started writing version numbers and tagging; x.y and if syntax changes, +1 to x, otherwise to y
 * started writing release notes, intended to cover any config file syntax changes needed when updating
 * added "drive_xxx=..." also, which applies to and is overriden by "disk_xxx=..." and "cd_xxx=..."
-* added "baloon=1" option
+* added "baloon=1" option (but without anything to actually automate ballooning... probably not automatic in vanilla qemu)
 
