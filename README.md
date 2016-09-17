@@ -108,8 +108,12 @@ vgaType - any qemu type you set is passed through to qemu (std,qxl,cirrus,vmware
 - vnc
 - spice
 
-drive_type:
-- applies to both diskN_type and cdN_type
+drive_type - applies to both diskN_type and cdN_type
+- ide (default)
+
+baloon:
+- 1 = enable qemu virtio-balloon-pci
+- 0 = disabled (default)
 
 assumptions - not bugs
 ==========

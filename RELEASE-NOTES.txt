@@ -1,0 +1,9 @@
+1.0
+
+* SYNTAX: changed "diskType=..." "cdType=..." defaults to be like the others: "disk_type=..."
+* BUG: cd_type wasn't used properly
+* started writing version numbers and tagging; x.y and if syntax changes, +1 to x, otherwise to y
+* started writing release notes, intended to cover any config file syntax changes needed when updating
+* added "drive_xxx=..." also, which applies to and is overriden by "disk_xxx=..." and "cd_xxx=..."
+* added "baloon=1" option
+

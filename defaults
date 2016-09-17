@@ -31,3 +31,5 @@ else
 	apparmor=0
 fi
 
+baloon=1
+

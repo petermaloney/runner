@@ -144,6 +144,10 @@ if [ -z "$sockets" ]; then
     sockets=1
 fi
 
+if [ "$baloon" = 1 ]; then
+    add -device virtio-balloon-pci,id=balloon0,bus=pcie.0
+fi
+
 add -smp "$cores",sockets="$sockets",cores="$cores",threads=1
 add -device ioh3420,bus=pcie.0,addr=1c.0,multifunction=on,port=1,chassis=1,id=root.1
 add -boot menu=on
@@ -242,6 +246,8 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
             fi
         fi
     fi
+
+    # apply defaults
     if [ -z "$diskN_type" ]; then
         if [ -n "$disk_type" ]; then
             diskN_type="$disk_type"
@@ -301,6 +307,8 @@ for cdname in $(set | awk -F= '$1 ~ /^cd[0-9]+_file$/ {print $0}' | grep -Eo "^c
             fi
         fi
     fi
+
+    # apply defaults
     if [ -z "$cdN_type" ]; then
         if [ -n "$cd_type" ]; then
             cdN_type="$cd_type"
