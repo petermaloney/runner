@@ -221,7 +221,7 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
         if [ ! -e "$diskN_file" -a -e "$img_path"/"$diskN_file" ]; then
             disk1_file="$img_path"/"$diskN_file"
         fi
-        if qemu-img info -f rbd "$diskN_file" >/dev/null 2>&1; then
+        if grep -q "^rbd:" <<< "$disk_file"; then
 #            echo "DEBUG: found good rbd disk"
             true
         elif [ ! -e "$diskN_file" ]; then
