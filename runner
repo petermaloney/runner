@@ -200,12 +200,19 @@ nextIndex=0
 disknum=0
 
 virtio_bus_added=0
+virtio_scsi_bus_added=0
 
 add_virtio_bus() {
     if [ "$virtio_bus_added" = 0 ]; then
-#        add -device virtio-scsi-pci,id=scsi
         add -device ahci,bus=pcie.0,id=ahci
         virtio_bus_added=1
+    fi
+}
+
+add_virtio_scsi_bus() {
+    if [ "$virtio_scsi_bus_added" = 0 ]; then
+        add -device virtio-scsi-pci,id=scsi
+        virtio_scsi_bus_added=1
     fi
 }
 
@@ -219,9 +226,9 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
 
     if [ -n "$diskN_file" ]; then
         if [ ! -e "$diskN_file" -a -e "$img_path"/"$diskN_file" ]; then
-            disk1_file="$img_path"/"$diskN_file"
+            diskN_file="$img_path"/"$diskN_file"
         fi
-        if grep -q "^rbd:" <<< "$disk_file"; then
+        if grep -q "^rbd:" <<< "$diskN_file"; then
 #            echo "DEBUG: found good rbd disk"
             true
         elif [ ! -e "$diskN_file" ]; then
@@ -266,6 +273,9 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
     if [ "$diskN_type" = "virtio" ]; then
         add_virtio_bus
     fi
+    if [ "$diskN_type" = "virtio-scsi" ]; then
+        add_virtio_scsi_bus
+    fi
 
     if [ "$diskN_type" = "ide" ]; then
         #IDE disks
@@ -276,6 +286,13 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
         #virtio disks
         if [ -n "$diskN_file" ]; then
             add -drive file=${diskN_file},id=${diskname},format=${diskN_format},index=${nextIndex},media=disk,if=virtio,discard=on
+            let nextIndex++
+        fi
+    elif [ "$diskN_type" = "virtio-scsi" ]; then
+        #virtio disks
+        if [ -n "$diskN_file" ]; then
+            add -device scsi-hd,drive=${diskname}
+            add -drive file=${diskN_file},id=${diskname},format=${diskN_format},index=${nextIndex},media=disk,if=none,discard=on
             let nextIndex++
         fi
     else

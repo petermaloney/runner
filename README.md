@@ -89,6 +89,7 @@ disk1_file:
 - ceph rbd with usual syntax, rbd:{pool}/{image}[:option=value], eg. rbd:rbd/vm-101-disk-1:id=peter
 
 disk1_type:
+- virtio-scsi (supports discard/fstrim)
 - virtio
 - ide
 

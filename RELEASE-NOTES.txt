@@ -1,3 +1,7 @@
+HEAD
+
+* support virtio-scsi-pci so discard/fstrim will work
+
 1.0
 
 * SYNTAX: changed "diskType=..." "cdType=..." defaults to be like the others: "disk_type=..."
