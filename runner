@@ -101,6 +101,11 @@ done
 apparmor() {
     path="$1"
 	modes="$2"
+    if [ ! -e "$path" ]; then
+        # skip rbd and other things that aren't filesystem paths
+        return
+    fi
+
 	if [ -z "$modes" ]; then
 		# rw is for disks
 		modes="rw"
@@ -489,12 +494,13 @@ fi
 #=============================
 
 if [ "$apparmor" = 1 ]; then
-    apparmor "$disk1"
-    apparmor "$disk2"
+    #TODO: support more diskN_file and cdN_file here
+    apparmor "$disk1_file"
+    apparmor "$disk2_file"
     apparmor "$isovirtiowin"
 
-    if [ -n "$cdFile" ]; then
-        apparmor "$cdFile"
+    if [ -n "$cd1_file" ]; then
+        apparmor "$cd1_file"
     fi
     if [ -n "$biosbin" ]; then
         apparmor "$biosbin"
