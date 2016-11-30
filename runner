@@ -221,6 +221,7 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
     diskN_file=$(set | awk -F= -v name="$diskname" '$1 == name "_file"' | cut -d'=' -f2-)
     diskN_format=$(set | awk -F= -v name="$diskname" '$1 == name "_format" {print $2}')
     diskN_type=$(set | awk -F= -v name="$diskname" '$1 == name "_type" {print $2}')
+    diskN_cache=$(set | awk -F= -v name="$diskname" '$1 == name "_cache" {print $2}')
 
 #    echo "DEBUG: file = $diskN_file, format = $diskN_format, type = $diskN_type"
 
@@ -265,6 +266,14 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
         fi
     fi
 
+    if [ -z "$diskN_cache" ]; then
+        if [ -n "$disk_cache" ]; then
+            diskN_cache="$disk_cache"
+        else
+            diskN_cache=writeback
+        fi
+    fi
+
     if [ "$apparmor" = 1 ]; then
         # add the required files to this VM's profile
         apparmor "$diskN_file"
@@ -280,19 +289,19 @@ for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo
     if [ "$diskN_type" = "ide" ]; then
         #IDE disks
         #  new ... works in manjaro, intended to work with multiple disks
-        add -drive file=${diskN_file},id=${diskname},format=${diskN_format},index=${nextIndex},media=disk,discard=on
+        add -drive file=${diskN_file},id=${diskname},format=${diskN_format},index=${nextIndex},media=disk,discard=on,cache=${diskN_cache}
         let nextIndex++
     elif [ "$diskN_type" = "virtio" ]; then
         #virtio disks
         if [ -n "$diskN_file" ]; then
-            add -drive file=${diskN_file},id=${diskname},format=${diskN_format},index=${nextIndex},media=disk,if=virtio,discard=on
+            add -drive file=${diskN_file},id=${diskname},format=${diskN_format},index=${nextIndex},media=disk,if=virtio,discard=on,cache=${diskN_cache}
             let nextIndex++
         fi
     elif [ "$diskN_type" = "virtio-scsi" ]; then
         #virtio disks
         if [ -n "$diskN_file" ]; then
             add -device scsi-hd,drive=${diskname}
-            add -drive file=${diskN_file},id=${diskname},format=${diskN_format},index=${nextIndex},media=disk,if=none,discard=on
+            add -drive file=${diskN_file},id=${diskname},format=${diskN_format},index=${nextIndex},media=disk,if=none,discard=on,cache=${diskN_cache}
             let nextIndex++
         fi
     else
