@@ -20,7 +20,8 @@ cd_type=ide
 net_type="virtio"
 net_bridge="br0"
 
-baseBridgeScript="$(dirname "$(readlink -f "$0")")"/qemu-bridge
+base_ifup_script="$(dirname "$(readlink -f "$0")")"/qemu-ifup
+base_ifdown_script="$(dirname "$(readlink -f "$0")")"/qemu-ifdown
 
 # actual port used by qemu is 5900 + vncport specified here
 vncport=0

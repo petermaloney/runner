@@ -12,7 +12,7 @@ Goals and features
 
 TODO
 ==========
-- for the "qemu-bridge" file and "qemu-bridge-*", first look in same dir as conf, then in same as runner
+- for the "qemu-ifup" file and "qemu-ifup-*", first look in same dir as conf, then in same as runner
 - give it a name and rename stuff... maybe call it qrun
 
 Installation
