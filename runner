@@ -117,7 +117,7 @@ apparmor() {
 
 if [ "$apparmor" = 1 ]; then
     # if the "all" file doesn't include this VM's profile, add that
-    if ! grep "usr.bin.qemu-system-x86_64-all>$" /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all; then
+    if ! grep "usr.bin.qemu-system-x86_64-${vmname}>$" /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all; then
         echo "#include <local/usr.bin.qemu-system-x86_64-${vmname}>" >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all
     fi
 
