@@ -97,6 +97,9 @@ disk1_format:
 - raw
 - qcow2
 
+disk1_cache:
+- from qemu manual: cache is "none", "writeback", "unsafe", "directsync" or "writethrough" and controls how the host cache is used to access block data
+
 cd1_type:
 - virtio
 - ide
