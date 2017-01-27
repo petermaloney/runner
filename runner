@@ -101,6 +101,11 @@ done
 apparmor() {
     path="$1"
 	modes="$2"
+    if [ ! -e "$path" ]; then
+        # skip rbd and other things that aren't filesystem paths
+        return
+    fi
+
 	if [ -z "$modes" ]; then
 		# rw is for disks
 		modes="rw"
@@ -112,7 +117,7 @@ apparmor() {
 
 if [ "$apparmor" = 1 ]; then
     # if the "all" file doesn't include this VM's profile, add that
-    if ! grep "usr.bin.qemu-system-x86_64-all>$" /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all; then
+    if ! grep "usr.bin.qemu-system-x86_64-${vmname}>$" /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all; then
         echo "#include <local/usr.bin.qemu-system-x86_64-${vmname}>" >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-all
     fi
 
@@ -401,21 +406,36 @@ for netname in $(set | awk -F= '$1 ~ /^net[0-9]+_(bridge|mac)$/ {print $0}' | gr
     # bridge is optional
     if set | grep "^${netname}_bridge=" >/dev/null 2>&1; then
         if [ -n "$net_bridge" ]; then
-            bridgeScript="${baseBridgeScript}-${net_bridge}"
-            if [ ! -e "${bridgeScript}" ]; then
-                sed "s/BRIDGE_NAME/$net_bridge/g" "${baseBridgeScript}" > "${bridgeScript}"
-                chmod +rx "${bridgeScript}"
+            ifup_script="${base_ifup_script}-${net_bridge}"
+            if [ ! -e "${ifup_script}" ]; then
+                sed "s/BRIDGE_NAME/$net_bridge/g" "${base_ifup_script}" > "${ifup_script}"
+                chmod +rx "${ifup_script}"
+            fi
+            ifdown_script="${base_ifdown_script}-${net_bridge}"
+            if [ ! -e "${ifdown_script}" ]; then
+                sed "s/BRIDGE_NAME/$net_bridge/g" "${base_ifdown_script}" > "${ifdown_script}"
+                chmod +rx "${ifdown_script}"
             fi
         else
             # blank means no bridge
-            bridgeScript=/bin/true
+            bridge_ifup_script=/bin/true
+            bridge_ifdown_script=/bin/true
         fi
+    elif [ -z "$net_bridge_default" ]; then
+        # no bridge variable and no default means no bridge script
+        ifup_script=no
+        ifdown_script=no
     else
         # no bridge variable means use default
-        bridgeScript="${baseBridgeScript}-${net_bridge_default}"
-        if [ ! -e "${bridgeScript}" ]; then
-            sed "s/BRIDGE_NAME/$net_bridge_default/g" "${baseBridgeScript}" > "${bridgeScript}"
-            chmod +rx "${bridgeScript}"
+        ifup_script="${base_ifup_script}-${net_bridge_default}"
+        if [ ! -e "${ifup_script}" ]; then
+            sed "s/BRIDGE_NAME/$net_bridge_default/g" "${base_ifup_script}" > "${ifup_script}"
+            chmod +rx "${ifup_script}"
+        fi
+        ifdown_script="${base_ifdown_script}-${net_bridge_default}"
+        if [ ! -e "${ifdown_script}" ]; then
+            sed "s/BRIDGE_NAME/$net_bridge_default/g" "${base_ifdown_script}" > "${ifdown_script}"
+            chmod +rx "${ifdown_script}"
         fi
     fi
 
@@ -450,7 +470,7 @@ for netname in $(set | awk -F= '$1 ~ /^net[0-9]+_(bridge|mac)$/ {print $0}' | gr
     # or just make sure names are short and be limited in how many nics to have (short name = filename, long name = ?)
 
     addr=$((12+netnum))
-    add -netdev type=tap,id=net"$netnum",ifname="$ifname",script=${bridgeScript},downscript=no
+    add -netdev type=tap,id=net"$netnum",ifname="$ifname",script=${ifup_script},downscript=${ifdown_script}
     add -device "$netDevice",mac="$net_mac",netdev=net"$netnum"
     let netnum++
 done
@@ -498,12 +518,13 @@ fi
 #=============================
 
 if [ "$apparmor" = 1 ]; then
-    apparmor "$disk1"
-    apparmor "$disk2"
+    #TODO: support more diskN_file and cdN_file here
+    apparmor "$disk1_file"
+    apparmor "$disk2_file"
     apparmor "$isovirtiowin"
 
-    if [ -n "$cdFile" ]; then
-        apparmor "$cdFile"
+    if [ -n "$cd1_file" ]; then
+        apparmor "$cd1_file"
     fi
     if [ -n "$biosbin" ]; then
         apparmor "$biosbin"
@@ -513,7 +534,8 @@ if [ "$apparmor" = 1 ]; then
     fi
 
 # TODO: automatically generate the bridge profile too? it's not just a single line... it has its own executables it uses too
-#	apparmor "$bridgeScript" rix
+#	apparmor "$ifup_script" rix
+#	apparmor "$ifdown_script" rix
 
     # apply the policy (to all VMs)
     if [ "$dry_run" != 1 ]; then

@@ -1,6 +1,10 @@
 HEAD
 
 * support virtio-scsi-pci so discard/fstrim will work
+* cache option for disks
+* workaround issue where adding a down device to a bridge can cause network interruption
+* bridge ifup and ifdown changes
+* renamed qemu-bridge script to qemu-ifup, so you need to update your apparmor profiles if you use them
 
 1.0
 
