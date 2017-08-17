@@ -5,6 +5,7 @@ HEAD
 * workaround issue where adding a down device to a bridge can cause network interruption
 * bridge ifup and ifdown changes
 * renamed qemu-bridge script to qemu-ifup, so you need to update your apparmor profiles if you use them
+* fixed issue with old name qemu-bridge, split into qemu-ifup and qemu-ifdown
 
 1.0
 
