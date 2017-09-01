@@ -127,7 +127,7 @@ ovmf:
 - 0 = disabled (default)
 
 ovmf_dir:
-- directory to store copies of the ovmf code (bios bin) and vars images
+- directory to store copies of the ovmf code (bios bin) and vars images (default = ${confdir}/ovmf)
 
 ovmf_code:
 - location of the original ovmf code bin file (default = /usr/share/ovmf/ovmf_code_x64.bin)
