@@ -136,10 +136,6 @@ if [ -n "$cpu" ]; then
     add -cpu "$cpu"
 fi
 
-if [ -n "$biosbin" ]; then
-    add -bios "$biosbin"
-fi
-
 # for backwards compat, "cpus" is assumed to mean cores
 if [ -z "$cores" -a -n "$cpus" ]; then
     cores="$cpus"
@@ -162,6 +158,46 @@ fi
 add -smp "${cpus},sockets=${sockets},cores=${cores},threads=${threads},maxcpus=${maxcpus}"
 add -device ioh3420,bus=pcie.0,addr=1c.0,multifunction=on,port=1,chassis=1,id=root.1
 add -boot menu=on
+
+############################
+# ovmf - uefi firmware
+############################
+
+if [ -z "$ovmf_dir" ]; then
+    ovmf_dir="${confdir}/ovmf"
+fi
+if [ -z "$ovmf_code" ]; then
+    ovmf_code=/usr/share/ovmf/ovmf_code_x64.bin
+fi
+if [ -z "$ovmf_vars" ]; then
+    ovmf_vars=/usr/share/ovmf/ovmf_vars_x64.bin
+fi
+
+if [ "$ovmf" = 1 ]; then
+    mkdir -p "$ovmf_dir"
+    if [ ! -e "${ovmf_dir}/${vmname}-code.bin" ]; then
+        cp "$ovmf_code" "${ovmf_dir}/${vmname}-code.bin"
+    fi
+    if [ ! -e "${ovmf_dir}/${vmname}-vars.bin" ]; then
+        cp "$ovmf_vars" "${ovmf_dir}/${vmname}-vars.bin"
+    fi
+
+    add  -drive if=pflash,format=raw,readonly,file="${ovmf_dir}/${vmname}-code.bin"
+    add  -drive if=pflash,format=raw,file="${ovmf_dir}/${vmname}-vars.bin"
+fi
+
+############################
+# bios (such as a custom SeaBIOS file)
+############################
+
+if [ -n "$biosbin" ]; then
+    if [ "$ovmf" = 1 ]; then
+        echo "WARNING: ignoring biosbin=\"${biosbin}\" when ovmf is enabled."
+        biosbin=
+    else
+        add -bios "$biosbin"
+    fi
+fi
 
 ############################
 # gpu
