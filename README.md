@@ -119,6 +119,22 @@ baloon:
 - 1 = enable qemu virtio-balloon-pci
 - 0 = disabled (default)
 
+biosbin:
+- path to bios file
+
+ovmf:
+- 1 = enable ovmf
+- 0 = disabled (default)
+
+ovmf_dir:
+- directory to store copies of the ovmf code (bios bin) and vars images (default = ${confdir}/ovmf)
+
+ovmf_code:
+- location of the original ovmf code bin file (default = /usr/share/ovmf/ovmf_code_x64.bin)
+
+ovmf_vars:
+- location of the original ovmf vars bin file (default = /usr/share/ovmf/ovmf_vars_x64.bin)
+
 assumptions - not bugs
 ==========
 
@@ -130,4 +146,4 @@ assumptions - not bugs
 assumptions - and maybe bugs
 ==========
 
-- currently tested on manjaro qemu 2.3.0-7 and 2.4.0-2; maybe some quirks or qemu command syntax are not from qemu but from Manjaro
+- currently tested on manjaro qemu 2.9.0; maybe some quirks or qemu command syntax are not from qemu but from Manjaro

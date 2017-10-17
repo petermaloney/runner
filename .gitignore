@@ -1,1 +1,3 @@
-qemu-bridge-*
+qemu-ifdown-*
+qemu-ifup-*
+
