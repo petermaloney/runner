@@ -265,7 +265,7 @@ add_virtio_scsi_bus() {
 
 IFS=$'\n'
 for diskname in $(set | awk -F= '$1 ~ /^disk[0-9]+_file$/ {print $0}' | grep -Eo "^disk[0-9]+" | sort -u); do
-    diskN_file=$(set | awk -F= -v name="$diskname" '$1 == name "_file"' | cut -d'=' -f2-)
+    diskN_file=$(set | awk -F= -v name="$diskname" '$1 == name "_file"' | cut -d'=' -f2- | sed -r "s|^'(.*)'$|\1|")
     diskN_format=$(set | awk -F= -v name="$diskname" '$1 == name "_format" {print $2}')
     diskN_type=$(set | awk -F= -v name="$diskname" '$1 == name "_type" {print $2}')
     diskN_cache=$(set | awk -F= -v name="$diskname" '$1 == name "_cache" {print $2}')
