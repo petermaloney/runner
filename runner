@@ -234,9 +234,11 @@ if [ -n "$vgaPci" ]; then
     add -vga none
 
     if [ -n "$romFile" ]; then
-        add -device vfio-pci,host="$vgaPci",bus=root.1,multifunction=on,x-vga=on,addr=0.0,romfile="$romFile"
+#        add -device vfio-pci,host="$vgaPci",bus=root.1,multifunction=on,x-vga=on,addr=0.0,romfile="$romFile"
+        add -device vfio-pci,host="$vgaPci",multifunction=on,x-vga=on,romfile="$romFile"
     else
-        add -device vfio-pci,host="$vgaPci",bus=root.1,multifunction=on,x-vga=on,addr=0.0
+#        add -device vfio-pci,host="$vgaPci",bus=root.1,multifunction=on,x-vga=on,addr=0.0
+        add -device vfio-pci,host="$vgaPci",multifunction=on,x-vga=on
     fi
 fi
 
