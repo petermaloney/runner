@@ -117,8 +117,8 @@ apparmor() {
     fi
 
 	if [ -z "$modes" ]; then
-		# rw is for disks
-		modes="rw"
+		# rwk is for disks
+		modes="rwk"
 	fi
     if [ -n "$path" ]; then
         if [ "$verbose" = 1 ]; then
