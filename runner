@@ -53,6 +53,7 @@ net_type_default="virtio"
 IFS=' '
 
 cmd=()
+cmd_append=()
 add() {
     echo "    $@ \\"
     cmd+=("$@")
@@ -61,6 +62,11 @@ add() {
 add_vfio() {
     device="$1"
     add -device vfio-pci,host="$device",bus=pcie.0
+}
+
+append() {
+    echo "    $@ \\"
+    cmd_append+=("$@")
 }
 
 #+==========================================================================
@@ -614,7 +620,7 @@ if [ "$verbose" = 1 ]; then
     done
 fi
 if [ "$dry_run" != 1 ]; then
-    qemu-system-x86_64 "${cmd[@]}"
+    qemu-system-x86_64 "${cmd[@]}" "${cmd_append[@]}"
     status=$?
 fi
 
