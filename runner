@@ -84,10 +84,14 @@ fi
 #+==========================================================================
 
 dry_run=0
+verbose=0
 while [ "$#" != 0 ]; do
     if [ "$1" = "-n" ]; then
         shift
         dry_run=1
+    elif [ "$1" = "-v" ]; then
+        shift
+        verbose=1
     else
         echo "ERROR: unsupported argument: \"$1\""
         exit 1
@@ -111,9 +115,15 @@ apparmor() {
 		modes="rw"
 	fi
     if [ -n "$path" ]; then
+        if [ "$verbose" = 1 ]; then
+            echo "DEBUG: adding apparmor rule: \"$(readlink -f "$path")\" $modes," \>\> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-"$vmname"
+        fi
         echo "\"$(readlink -f "$path")\" $modes," >> /etc/apparmor.d/local/usr.bin.qemu-system-x86_64-"$vmname"
     fi
 }
+if [ "$verbose" = 1 ]; then
+    echo "DEBUG: apparmor = ${apparmor}"
+fi
 
 if [ "$apparmor" = 1 ]; then
     # if the "all" file doesn't include this VM's profile, add that
@@ -593,6 +603,16 @@ fi
 
 #=============================
 
+if [ "$verbose" = 1 ]; then
+    printf "qemu-system-x86_64 "
+    for arg in "${cmd[@]}" "${cmd_append[@]}"; do
+        if [ "${arg:0:1}" = "-" ]; then
+            printf '\\\n    '"${arg} "
+        else
+            printf "$arg "
+        fi
+    done
+fi
 if [ "$dry_run" != 1 ]; then
     qemu-system-x86_64 "${cmd[@]}"
     status=$?
