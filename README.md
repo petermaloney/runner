@@ -112,7 +112,15 @@ vgaType - any qemu type you set is passed through to qemu (std,qxl,cirrus,vmware
 - vnc
 - spice
 
-drive_type - applies to both diskN_type and cdN_type
+romFile - file path to a VGA rom file to use instead of qemu default which is to use what's on the hardware; with some configurations (presumably kernel,qemu,hw,seabios versions) this could improve stability problems when rebooting guests
+
+vgaPci - pci address of the GPU to add
+
+vga_pci_add_bus - controls adding bus,addr options for the vfio-pci line for vgaPci:
+- 0 - does not add it
+- 1 - (default) adds it
+
+drive_type - applies to both diskN_type and cdN_type:
 - ide (default)
 
 baloon:
