@@ -233,11 +233,20 @@ if [ -n "$vgaPci" ]; then
 
     add -vga none
 
+    vga_args="host="$vgaPci",multifunction=on,x-vga=on"
+
     if [ -n "$romFile" ]; then
-        add -device vfio-pci,host="$vgaPci",bus=root.1,multifunction=on,x-vga=on,addr=0.0,romfile="$romFile"
-    else
-        add -device vfio-pci,host="$vgaPci",bus=root.1,multifunction=on,x-vga=on,addr=0.0
+        vga_args="${vga_args},romfile=${romFile}"
     fi
+    echo "vga_pci_add_bus = $vga_pci_add_bus"
+    if [ -z "$vga_pci_add_bus" -o "$vga_pci_add_bus" != 0 ]; then
+        # if unset, or set to 0, we add the bus,addr stuff
+        # this seems to be needed on windows for good performance
+        # and works fine on an HD 6770, but on my board and an R7 260X, it only works in linux without this
+        vga_args="${vga_args},bus=root.1,addr=0.0"
+    fi
+    
+    add -device "vfio-pci,${vga_args}"
 fi
 
 # ==========================
