@@ -112,6 +112,13 @@ vgaType - any qemu type you set is passed through to qemu (std,qxl,cirrus,vmware
 - vnc
 - spice
 
+with vnc, there's also:
+vncport - the number to add to 5900 to get the listen port (default 0)
+
+with spice, there's also:
+spice_port - port to listen to for SPICE clients (default 5900)
+spice_addr - address to listen on for SPICE clients (default 127.0.0.1)
+
 romFile - file path to a VGA rom file to use instead of qemu default which is to use what's on the hardware; with some configurations (presumably kernel,qemu,hw,seabios versions) this could improve stability problems when rebooting guests
 
 vgaPci - pci address of the GPU to add
