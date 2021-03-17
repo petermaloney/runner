@@ -123,7 +123,7 @@ vga_pci_add_bus - controls adding bus,addr options for the vfio-pci line for vga
 drive_type - applies to both diskN_type and cdN_type:
 - ide (default)
 
-baloon:
+balloon:
 - 1 = enable qemu virtio-balloon-pci
 - 0 = disabled (default)
 
