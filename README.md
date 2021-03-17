@@ -143,6 +143,14 @@ ovmf_code:
 ovmf_vars:
 - location of the original ovmf vars bin file (default = /usr/share/ovmf/ovmf_vars_x64.bin)
 
+monitor_stdio:
+- 1 = enable stdio monitor (default)
+- 0 = disabled
+
+monitor_qmp:
+- 1 = enable qmp monitor (for use with a qmp client, eg. qmp-shell -H /var/run/runner/qmp/${vmname}.qmp)
+- 0 = disabled (default)
+
 assumptions - not bugs
 ==========
 

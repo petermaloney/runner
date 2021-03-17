@@ -552,11 +552,26 @@ fi
 # monitor
 #=============================
 
-#telnet monitor
-#add -monitor telnet:localhost:7100,server,nowait,nodelay
+if [ -z "$monitor_stdio" ]; then
+    monitor_stdio=1
+fi
+if [ -z "$monitor_qmp" ]; then
+    monitor_qmp=1
+fi
 
-#stdio monitor
-add -monitor stdio
+if [ "$monitor_stdio" != 0 ]; then
+    #stdio monitor
+    add -monitor stdio
+fi
+if [ "$monitor_qmp"  != 0 ]; then
+    if [ ! -e "/var/run/runner/qmp" -a "$dry_run" = 0 ]; then
+        mkdir -p "/var/run/runner/qmp"
+    fi
+    add -chardev "socket,id=qmp,path=/var/run/runner/qmp/${vmname}.qmp,server,nowait"
+    add -mon chardev=qmp,mode=control
+    add -chardev "socket,id=qmp-event,path=/var/run/runner/qmp/qmeventd.sock,reconnect=5"
+    add -mon chardev=qmp-event,mode=control
+fi
 
 #=============================
 # GUI
