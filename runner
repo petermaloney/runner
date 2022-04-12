@@ -69,6 +69,37 @@ append() {
     cmd_append+=("$@")
 }
 
+#+==========================================================================
+# functions (not intended for use inside the vmconf script)
+#+==========================================================================
+
+attach_to_running() {
+    qmp_shell_path=
+    if [ -z "$qmp_shell_path" ]; then
+        if which qmp-shell >/dev/null 2>&1; then
+            qmp_shell_path=$(which qmp-shell)
+        fi
+    fi
+    if [ -z "$qmp_shell_path" ]; then
+        if [ -e /opt/qmp-shell ]; then
+            if find /opt/qmp-shell/ -not -user 0 -o -not -group 0 | grep -Eq .; then
+                echo "ERROR: paranoidly refusing to use /opt/qmp-shell/ which contanis files owned by other than root:root"
+            else
+                qmp_shell_path=/opt/qmp-shell/scripts/qmp-shell
+            fi
+        fi
+    fi
+
+    if [ -z "$qmp_shell_path" ]; then
+        echo "ERROR: can't find qmp-shell command. see install-qmp-shell.txt" >&2
+        exit 1
+    elif [ ! -e "/var/run/runner/qmp/${vmname}.qmp" ]; then
+        echo "ERROR: can't find a qmp file for the VM \"${vmname}\"; did you set qmp=1 in the conf and start the VM?" >&2
+        exit 1
+    else
+        qmp-shell -H "/var/run/runner/qmp/${vmname}.qmp"
+    fi
+}
 
 #+==========================================================================
 # Command Line Arguments
@@ -81,12 +112,19 @@ while [ "$#" != 0 ]; do
         dry_run=1
     elif [ "$1" = "-v" ]; then
         verbose=1
+    elif [ "$1" = "-r" ]; then
+        attach_to_running=1
     else
         echo "ERROR: unsupported argument: \"$1\""
         exit 1
     fi
     shift
 done
+
+if [ "$attach_to_running" = 1 ]; then
+    attach_to_running
+    exit 0
+fi
 
 #+==========================================================================
 # vm settings
@@ -567,7 +605,7 @@ if [ "$monitor_qmp"  != 0 ]; then
     if [ ! -e "/var/run/runner/qmp" -a "$dry_run" = 0 ]; then
         mkdir -p "/var/run/runner/qmp"
     fi
-    add -chardev "socket,id=qmp,path=/var/run/runner/qmp/${vmname}.qmp,server,nowait"
+    add -chardev "socket,id=qmp,path=/var/run/runner/qmp/${vmname}.qmp,server=on,nowait"
     add -mon chardev=qmp,mode=control
     add -chardev "socket,id=qmp-event,path=/var/run/runner/qmp/qmeventd.sock,reconnect=5"
     add -mon chardev=qmp-event,mode=control
