@@ -643,9 +643,10 @@ elif [ "$vgaType" = "spice" ]; then
     #    - sound
     export QEMU_AUDIO_DRV=spice
     add -device intel-hda -device hda-duplex
-    #    - usb redirection
-    #        needs more qemu arguments though... see https://www.spice-space.org/spice-user-manual.html#_usb_redirection
-    #        you'll have to call the add function in your config to do these
+    #    - multiple monitor support, usb redirection
+    #        see https://www.spice-space.org/spice-user-manual.html#_multiple_monitor_support
+    #        see https://www.spice-space.org/spice-user-manual.html#_usb_redirection
+    #        you'll have to call the add function in your config to do these; I assume they can't be done generically
 elif [ -n "$vgaType" ]; then
     # std,qxl,cirrus,etc.
     add -vga "$vgaType"
