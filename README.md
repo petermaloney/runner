@@ -169,4 +169,4 @@ assumptions - not bugs
 assumptions - and maybe bugs
 ==========
 
-- currently tested on manjaro qemu 2.9.0; maybe some quirks or qemu command syntax are not from qemu but from Manjaro
+- currently tested on artixlinux qemu 6.2.0; maybe some quirks or qemu command syntax are not from qemu but from this
