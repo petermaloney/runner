@@ -616,6 +616,9 @@ fi
 # vnc, spice, or default (which is an X11 window)
 #=============================
 
+if [ "$verbose" = 1 ]; then
+    echo "DEBUG: vgaType = $vgaType"
+fi
 if [ -n "$vgaPci" -o "$vgaType" = "vnc" ]; then
     #vnc
 	if [ -z "$vncport" ]; then
