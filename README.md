@@ -84,13 +84,13 @@ then run your config file (as root):
 Configuration Functions
 ==========
 
-add <args>:
+add &lt;args&gt;:
 adds any arbitrary qemu argument to the qemu command
 
-add_vfio <pci_id>:
+add_vfio &lt;pci_id&gt;:
 shortcut for the add function for pci pass through
 
-append <args>:
+append &lt;args&gt;:
 same as add, except it's added last
 
 Configuration Options
