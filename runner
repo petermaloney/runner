@@ -605,7 +605,7 @@ if [ "$monitor_qmp"  != 0 ]; then
     if [ ! -e "/var/run/runner/qmp" -a "$dry_run" = 0 ]; then
         mkdir -p "/var/run/runner/qmp"
     fi
-    add -chardev "socket,id=qmp,path=/var/run/runner/qmp/${vmname}.qmp,server=on,nowait"
+    add -chardev "socket,id=qmp,path=/var/run/runner/qmp/${vmname}.qmp,server=on,wait=off"
     add -mon chardev=qmp,mode=control
     add -chardev "socket,id=qmp-event,path=/var/run/runner/qmp/qmeventd.sock,reconnect=5"
     add -mon chardev=qmp-event,mode=control
