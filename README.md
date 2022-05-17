@@ -81,6 +81,18 @@ then run your config file (as root):
 # ./vm1
 ```
 
+Configuration Functions
+==========
+
+add <args>:
+adds any arbitrary qemu argument to the qemu command
+
+add_vfio <pci_id>:
+shortcut for the add function for pci pass through
+
+append <args>:
+same as add, except it's added last
+
 Configuration Options
 ==========
 
